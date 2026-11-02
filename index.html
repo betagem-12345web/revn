@@ -1,0 +1,387 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REVN | Tienda Digital</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f6f8;color:#202124;font-family:Arial,sans-serif}
+header{background:white;border-bottom:1px solid #e5e5e5;padding:18px 5%;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.logo{font-size:28px;font-weight:900;letter-spacing:4px}
+nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+nav a{color:#222;text-decoration:none;font-size:13px;font-weight:bold}
+button{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;cursor:pointer}
+.dark{background:#17191d;color:white}
+.light{background:#eee;color:#222}
+main{max-width:1100px;margin:auto;padding:20px}
+.hero{text-align:center;padding:55px 15px 35px}
+.hero h1{font-size:38px;margin:0 0 12px}
+.hero p,.muted{color:#858585}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.product{background:white;border:1px solid #e8e8e8;border-radius:14px;padding:25px;text-align:center}
+.coin{font-size:36px;margin-bottom:12px}
+.price{font-size:23px;font-weight:bold;margin:17px 0}
+.panel{background:white;border:1px solid #e8e8e8;border-radius:14px;padding:22px;margin:22px 0}
+.hidden{display:none!important}
+.modal-bg{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:15px;z-index:10}
+.modal{background:white;border-radius:15px;padding:25px;width:100%;max-width:440px;max-height:90vh;overflow:auto}
+.modal h2{margin-top:0}
+.modal-buttons{display:grid;gap:10px;margin-top:20px}
+.close{float:right;background:#eee;padding:7px 11px}
+input,textarea{width:100%;padding:13px;border:1px solid #ddd;border-radius:9px;margin:8px 0 14px;font:inherit}
+.order{border:1px solid #e7e7e7;border-radius:12px;padding:16px;margin:12px 0}
+.status{font-weight:bold}
+.green{color:#168444}
+.cart-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #eee}
+.cart-line button{padding:8px 11px}
+.total{text-align:right;font-size:22px;font-weight:bold;margin:20px 0}
+footer{text-align:center;color:#888;padding:35px}
+.count{background:#17191d;color:white;border-radius:20px;padding:4px 8px;margin-left:4px}
+@media(max-width:600px){header{justify-content:center}nav{justify-content:center}.hero h1{font-size:29px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">REVN</div>
+  <nav>
+    <a href="#tienda">TIENDA</a>
+    <a href="#pedidos">MIS PEDIDOS</a>
+    <a href="#seguimiento">SEGUIMIENTO</a>
+    <a href="#soporte">SOPORTE</a>
+    <button class="light" onclick="abrirCarrito()">CARRITO <span class="count" id="cartCount">0</span></button>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>BIENVENIDO A REVN</h1>
+  <p>Tu tienda digital de confianza.</p>
+</section>
+
+<main>
+
+<section id="tienda">
+  <h2>Nuestros productos</h2>
+  <div class="products" id="products"></div>
+</section>
+
+<section id="carrito" class="panel hidden">
+  <h2>Tu carrito</h2>
+  <div id="cartItems"></div>
+  <div class="total" id="cartTotal">Total: $0</div>
+  <button class="dark" onclick="comprarCarrito()">COMPRAR CARRITO</button>
+  <button class="light" onclick="vaciarCarrito()">VACIAR</button>
+</section>
+
+<section id="pedidos" class="panel">
+  <h2>Mis pedidos</h2>
+  <p class="muted">Tus pedidos guardados en este navegador.</p>
+  <div id="myOrders"></div>
+</section>
+
+<section id="seguimiento" class="panel">
+  <h2>Seguimiento de pedido</h2>
+  <input id="trackCode" placeholder="Ingresá tu código REVN">
+  <button class="dark" onclick="seguirPedido()">BUSCAR PEDIDO</button>
+  <div id="trackResult"></div>
+</section>
+
+<section id="soporte" class="panel">
+  <h2>Soporte REVN</h2>
+  <p>¿Necesitás ayuda con tu compra?</p>
+  <textarea id="supportMessage" placeholder="Escribí tu consulta..."></textarea>
+  <button class="dark" onclick="enviarSoporte()">CONTACTAR SOPORTE</button>
+</section>
+
+</main>
+
+<footer>REVN © 2026 | Tienda Digital</footer>
+
+<div class="modal-bg hidden" id="choiceModal">
+  <div class="modal">
+    <button class="close" onclick="cerrarModal('choiceModal')">✕</button>
+    <h2>¿Cómo querés comprar?</h2>
+    <p id="choiceProduct"></p>
+    <div class="modal-buttons">
+      <button class="dark" onclick="compraDirecta()">COMPRAR DIRECTAMENTE</button>
+      <button class="light" onclick="agregarAlCarrito()">AGREGAR AL CARRITO</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="orderModal">
+  <div class="modal">
+    <button class="close" onclick="cerrarModal('orderModal')">✕</button>
+    <h2>¡Pedido generado!</h2>
+    <p>Tu código de pedido es:</p>
+    <h2 id="newOrderCode"></h2>
+    <p id="newOrderDescription"></p>
+    <p class="muted">Contactá al vendedor para acordar el pago y la entrega.</p>
+    <div class="modal-buttons">
+      <button class="dark" onclick="contactarPedido()">CONTACTAR POR WHATSAPP</button>
+      <button class="light" onclick="cerrarModal('orderModal')">CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WHATSAPP = "5492345443851";
+const KEY_PEDIDOS = "revn_pedidos";
+const KEY_PRODUCTOS = "revn_productos";
+
+const defaults = [
+  {id:"default200",nombre:"200 Robux",cantidad:200,precio:4831,telefono:WHATSAPP},
+  {id:"default400",nombre:"400 Robux",cantidad:400,precio:8571,telefono:WHATSAPP},
+  {id:"default800",nombre:"800 Robux",cantidad:800,precio:15777,telefono:WHATSAPP}
+];
+
+let selectedProduct = null;
+let latestOrder = null;
+let cart = leerCarrito();
+
+function leer(key){
+  try{
+    const data=JSON.parse(localStorage.getItem(key)||"[]");
+    return Array.isArray(data)?data:[];
+  }catch(e){return []}
+}
+
+function leerCarrito(){
+  try{
+    const data=JSON.parse(localStorage.getItem("revn_carrito")||"[]");
+    return Array.isArray(data)?data:[];
+  }catch(e){return []}
+}
+
+function dinero(valor){
+  return "$"+Number(valor||0).toLocaleString("es-AR");
+}
+
+function escapar(valor){
+  return String(valor??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function getProducts(){
+  const personalizados=leer(KEY_PRODUCTOS).map(p=>({
+    id:p.id,
+    nombre:p.nombre||(p.cantidad+" Robux"),
+    cantidad:p.cantidad,
+    precio:Number(p.precio),
+    telefono:p.telefono||WHATSAPP
+  }));
+  return [...defaults,...personalizados];
+}
+
+function renderProducts(){
+  const productos=getProducts();
+  document.getElementById("products").innerHTML=productos.map((p,i)=>`
+    <div class="product">
+      <div class="coin">◉</div>
+      <h3>${escapar(p.nombre)}</h3>
+      <div class="price">${dinero(p.precio)}</div>
+      <button class="dark" onclick="elegirProducto(${i})">COMPRAR</button>
+    </div>
+  `).join("");
+}
+
+function elegirProducto(index){
+  selectedProduct=getProducts()[index];
+  if(!selectedProduct)return;
+
+  document.getElementById("choiceProduct").textContent=
+    selectedProduct.nombre+" — "+dinero(selectedProduct.precio);
+
+  document.getElementById("choiceModal").classList.remove("hidden");
+}
+
+function cerrarModal(id){
+  document.getElementById(id).classList.add("hidden");
+}
+
+function compraDirecta(){
+  if(!selectedProduct)return;
+  const producto={...selectedProduct};
+  cerrarModal("choiceModal");
+  crearPedido([producto]);
+}
+
+function agregarAlCarrito(){
+  if(!selectedProduct)return;
+  cart.push({...selectedProduct});
+  guardarCarrito();
+  cerrarModal("choiceModal");
+  alert("¡Producto agregado al carrito!");
+}
+
+function guardarCarrito(){
+  localStorage.setItem("revn_carrito",JSON.stringify(cart));
+  renderCart();
+}
+
+function abrirCarrito(){
+  document.getElementById("carrito").classList.remove("hidden");
+  renderCart();
+  document.getElementById("carrito").scrollIntoView({behavior:"smooth"});
+}
+
+function renderCart(){
+  document.getElementById("cartCount").textContent=cart.length;
+
+  const container=document.getElementById("cartItems");
+
+  if(cart.length===0){
+    container.innerHTML='<p class="muted">Tu carrito está vacío.</p>';
+  }else{
+    container.innerHTML=cart.map((p,i)=>`
+      <div class="cart-line">
+        <div>
+          <strong>${escapar(p.nombre)}</strong><br>
+          <span class="muted">${dinero(p.precio)}</span>
+        </div>
+        <button class="light" onclick="quitarDelCarrito(${i})">QUITAR</button>
+      </div>
+    `).join("");
+  }
+
+  const total=cart.reduce((sum,p)=>sum+Number(p.precio||0),0);
+  document.getElementById("cartTotal").textContent="Total: "+dinero(total);
+}
+
+function quitarDelCarrito(index){
+  cart.splice(index,1);
+  guardarCarrito();
+}
+
+function vaciarCarrito(){
+  if(cart.length===0)return;
+  if(confirm("¿Querés vaciar el carrito?")){
+    cart=[];
+    guardarCarrito();
+  }
+}
+
+function comprarCarrito(){
+  if(cart.length===0){
+    alert("Tu carrito está vacío.");
+    return;
+  }
+
+  const productos=cart.map(p=>({...p}));
+  crearPedido(productos);
+
+  cart=[];
+  guardarCarrito();
+  document.getElementById("carrito").classList.add("hidden");
+}
+
+function crearPedido(productos){
+  const pedidos=leer(KEY_PEDIDOS);
+
+  let codigo;
+  do{
+    codigo="REVN-"+Math.random().toString(36).substring(2,8).toUpperCase();
+  }while(pedidos.some(p=>p.codigo===codigo));
+
+  const total=productos.reduce((sum,p)=>sum+Number(p.precio||0),0);
+  const nombres=productos.map(p=>p.nombre).join(" + ");
+
+  const pedido={
+    codigo:codigo,
+    producto:nombres,
+    precio:total,
+    fecha:new Date().toLocaleString("es-AR"),
+    estado:"Pendiente",
+    productos:productos
+  };
+
+  pedidos.push(pedido);
+  localStorage.setItem(KEY_PEDIDOS,JSON.stringify(pedidos));
+
+  latestOrder=pedido;
+  renderOrders();
+
+  document.getElementById("newOrderCode").textContent=codigo;
+  document.getElementById("newOrderDescription").textContent=
+    nombres+" | Total: "+dinero(total);
+
+  document.getElementById("orderModal").classList.remove("hidden");
+}
+
+function contactarPedido(){
+  if(!latestOrder)return;
+
+  const telefono=latestOrder.productos?.[0]?.telefono||WHATSAPP;
+  const mensaje=
+    "Hola, hice un pedido en REVN.\n"+
+    "Código: "+latestOrder.codigo+"\n"+
+    "Productos: "+latestOrder.producto+"\n"+
+    "Total: "+dinero(latestOrder.precio);
+
+  window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank");
+}
+
+function renderOrders(){
+  const pedidos=leer(KEY_PEDIDOS);
+  const container=document.getElementById("myOrders");
+
+  if(pedidos.length===0){
+    container.innerHTML='<p class="muted">Todavía no tenés pedidos.</p>';
+    return;
+  }
+
+  container.innerHTML=pedidos.slice().reverse().map(p=>`
+    <div class="order">
+      <strong>${escapar(p.codigo)}</strong>
+      <p>Producto: ${escapar(p.producto)}</p>
+      <p>Precio: <strong>${dinero(p.precio)}</strong></p>
+      <p>Estado: <strong class="${p.estado==="Entregado"?"green":""}">${escapar(p.estado||"Pendiente")}</strong></p>
+      <p class="muted">${escapar(p.fecha||"Sin fecha")}</p>
+    </div>
+  `).join("");
+}
+
+function seguirPedido(){
+  const codigo=document.getElementById("trackCode").value.trim().toUpperCase();
+  const pedidos=leer(KEY_PEDIDOS);
+  const pedido=pedidos.find(p=>String(p.codigo).toUpperCase()===codigo);
+  const result=document.getElementById("trackResult");
+
+  if(!pedido){
+    result.innerHTML='<p class="muted">No encontramos ese pedido.</p>';
+    return;
+  }
+
+  result.innerHTML=`
+    <div class="order">
+      <strong>${escapar(pedido.codigo)}</strong>
+      <p>Producto: ${escapar(pedido.producto)}</p>
+      <p>Precio: ${dinero(pedido.precio)}</p>
+      <p>Estado: <strong>${escapar(pedido.estado||"Pendiente")}</strong></p>
+    </div>
+  `;
+}
+
+function enviarSoporte(){
+  const mensaje=document.getElementById("supportMessage").value.trim();
+  if(!mensaje){
+    alert("Escribí tu consulta primero.");
+    return;
+  }
+  window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(mensaje),"_blank");
+}
+
+window.addEventListener("storage",event=>{
+  if(event.key===KEY_PRODUCTOS)renderProducts();
+  if(event.key===KEY_PEDIDOS)renderOrders();
+});
+
+renderProducts();
+renderCart();
+renderOrders();
+</script>
+</body>
+</html>
